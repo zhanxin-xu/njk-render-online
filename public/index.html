@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nunjucks Template Preview</title>
+    <meta name="description" content="在线实时预览 Nunjucks 模板，支持变量编辑与智能检测，快速生成 HTML 输出。">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
     <style>
@@ -36,7 +38,7 @@
 
         .container {
             display: flex;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 120px);
             gap: 1rem;
             padding: 1rem;
         }
@@ -204,11 +206,29 @@
             font-style: italic;
         }
 
+        .footer {
+            background: #fff;
+            border-top: 1px solid #e1e8ed;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .footer a {
+            color: #2b6cb0;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
                 height: auto;
-                min-height: calc(100vh - 80px);
+                min-height: calc(100vh - 120px);
             }
             
             .left-panel {
@@ -275,6 +295,8 @@
             </div>
         </div>
     </div>
+
+    <footer class="footer">🎯 <a href="https://github.com/zhanxin-xu/njk-render-online" target="_blank" rel="noopener">GitHub Repository</a></footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
