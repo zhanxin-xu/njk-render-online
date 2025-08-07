@@ -1,5 +1,5 @@
 {
-  "name": "njk-render",
+  "name": "njk-render-online",
   "version": "1.0.0",
   "description": "Online Nunjucks template preview tool",
   "main": "api/render.js",
