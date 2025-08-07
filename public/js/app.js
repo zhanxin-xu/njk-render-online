@@ -227,9 +227,10 @@ class NunjucksPreview {
             this.updateStatus('Rendering...');
             const res = await fetch('/api/render', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template, variables }) });
             const result = await res.json();
-            if (result.success) {
-                previewContent.innerHTML = result.html;
-                this.updateStatus('Rendered');
+                            if (result.success) {
+                    const renderedHtml = result.html.replace(/<!--([\s\S]*?)-->/g, '<span class="html-comment">&lt;!--$1--&gt;</span>');
+                    previewContent.innerHTML = renderedHtml;
+                    this.updateStatus('Rendered');
             } else {
                 previewContent.innerHTML = `<div class="error"><strong>Rendering Error:</strong><br>${result.error}</div>`;
                 this.updateStatus('Error', true);
