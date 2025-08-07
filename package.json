@@ -1,0 +1,18 @@
+{
+  "name": "njk-render",
+  "version": "1.0.0",
+  "description": "Online Nunjucks template preview tool",
+  "main": "api/render.js",
+  "scripts": {
+    "build": "echo 'No build step needed'"
+  },
+  "keywords": ["nunjucks", "template", "preview", "online"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "nunjucks": "^3.2.4"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}
