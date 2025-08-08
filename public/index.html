@@ -85,7 +85,7 @@
         }
 
         .CodeMirror {
-            height: 100% !important;
+            height: calc(100% - 45px) !important;
             font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
             font-size: 14px;
         }
@@ -152,6 +152,7 @@
             overflow: hidden;
             background: #fff;
             white-space: pre-wrap;
+            position: relative;
         }
 
         .preview-content iframe {
@@ -159,6 +160,12 @@
             height: 100%;
             border: 0;
             background: #fff;
+            display: block;
+            margin: 0;
+            padding: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .preview-content pre {

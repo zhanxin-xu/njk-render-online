@@ -292,7 +292,7 @@ class NunjucksPreview {
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; padding: 20px; padding-bottom: 40px; max-width: 800px; margin: 0 auto; }
         h1, h2, h3, h4, h5, h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
         h1 { font-size: 2em; border-bottom: 1px solid #eaecef; padding-bottom: 10px; }
         h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 8px; }
@@ -319,8 +319,14 @@ class NunjucksPreview {
                         frame.src = url;
                     }
                 } else {
-                    // Text mode - show plain text in iframe
+                    // Text mode - show plain text with line numbers in iframe
                     if (frame) {
+                        const lines = content.split('\n');
+                        const numberedContent = lines.map((line, index) => {
+                            const lineNumber = (index + 1).toString().padStart(3, ' ');
+                            return `<div class="line"><span class="line-number">${lineNumber}</span><span class="line-content">${this.escapeHtml(line)}</span></div>`;
+                        }).join('');
+                        
                         const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -328,16 +334,48 @@ class NunjucksPreview {
     <style>
         body { 
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; 
-            line-height: 1.5; 
-            padding: 20px; 
+            line-height: 1.2; 
+            padding: 0;
+            padding-bottom: 40px;
             margin: 0; 
             white-space: pre-wrap; 
             word-wrap: break-word;
             font-size: 14px;
+            background: #fafbfc;
+        }
+        .line {
+            display: flex;
+            min-height: 18px;
+        }
+        .line:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .line:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .line-number {
+            background: #f6f8fa;
+            color: #656d76;
+            padding: 2px 8px;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid #e1e4e8;
+            min-width: 40px;
+            flex-shrink: 0;
+            font-size: 13px;
+            font-weight: 400;
+        }
+        .line-content {
+            padding: 2px 16px;
+            flex: 1;
+            background: transparent;
+        }
+        .line-content:empty::before {
+            content: " ";
         }
     </style>
 </head>
-<body>${this.escapeHtml(content)}</body>
+<body>${numberedContent}</body>
 </html>`;
                         const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
                         const url = URL.createObjectURL(blob);
