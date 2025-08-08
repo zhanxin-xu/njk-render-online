@@ -137,38 +137,42 @@ class NunjucksPreview {
     }
 
     updateVariablesUI(detectedVars) {
-        const container = document.getElementById('variables-container');
-        if (detectedVars.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    <p>No variables detected</p>
-                    <small>Variables will appear here when you write your template</small>
-                </div>
-            `;
-            return;
+        // Since we're using a JSON textarea now, we just need to update the JSON content
+        // if there are new variables detected
+        const jsonArea = document.getElementById('variables-json');
+        if (!jsonArea) return;
+        
+        try {
+            const currentJson = jsonArea.value.trim();
+            const currentVars = currentJson ? JSON.parse(currentJson) : {};
+            
+            // Add default values for new variables that don't exist
+            let hasNewVars = false;
+            detectedVars.forEach(varName => {
+                if (!(varName in currentVars)) {
+                    currentVars[varName] = this.getDefaultValue(varName);
+                    hasNewVars = true;
+                }
+            });
+            
+            // Only update if there are new variables
+            if (hasNewVars) {
+                jsonArea.value = JSON.stringify(currentVars, null, 2);
+            }
+        } catch (err) {
+            // If current JSON is invalid, create new JSON with detected variables
+            const newVars = {};
+            detectedVars.forEach(varName => {
+                newVars[varName] = this.getDefaultValue(varName);
+            });
+            jsonArea.value = JSON.stringify(newVars, null, 2);
         }
-        const existingValues = this.getExistingValues();
-        const variablesHTML = detectedVars.map(varName => {
-            const currentValue = existingValues[varName] || this.getDefaultValue(varName);
-            const inputType = this.guessInputType(varName, currentValue);
-            return `
-                <div class="variable-item">
-                    <label for="var_${varName}">${varName}</label>
-                    ${inputType === 'textarea' ? `<textarea id="var_${varName}" name="${varName}" placeholder="Enter ${varName} value...">${currentValue}</textarea>` : `<input type="${inputType}" id="var_${varName}" name="${varName}" value="${currentValue}" placeholder="Enter ${varName} value...">`}
-                </div>`;
-        }).join('');
-        container.innerHTML = variablesHTML;
     }
 
     getExistingValues() {
-        const values = {};
-        document.querySelectorAll('#variables-container input, #variables-container textarea').forEach(input => {
-            if (input.name) values[input.name] = input.value;
-        });
-        return values;
+        // This method is no longer used since we're using JSON textarea
+        // but keeping it for compatibility
+        return {};
     }
 
     getDefaultValue(varName) {
@@ -177,16 +181,16 @@ class NunjucksPreview {
             'title': 'Sample Title',
             'description': 'Sample description',
             'currentTime': new Date().toLocaleString(),
-            'showList': 'true',
-            'items': JSON.stringify([
+            'showList': true,
+            'items': [
                 { title: 'Item 1', description: 'First item' },
                 { title: 'Item 2', description: 'Second item' }
-            ], null, 2)
+            ]
         };
         if (varName.toLowerCase().includes('time') || varName.toLowerCase().includes('date')) return new Date().toLocaleString();
-        if (/(show|is|has)/i.test(varName)) return 'true';
-        if (/(list|items|array)/i.test(varName)) return JSON.stringify(['Item 1', 'Item 2', 'Item 3'], null, 2);
-        if (/(count|number)/i.test(varName)) return '5';
+        if (/(show|is|has)/i.test(varName)) return true;
+        if (/(list|items|array)/i.test(varName)) return ['Item 1', 'Item 2', 'Item 3'];
+        if (/(count|number)/i.test(varName)) return 5;
         return defaults[varName] || '';
     }
 
@@ -326,13 +330,50 @@ class NunjucksPreview {
             return;
         }
         let variables = {};
+        const jsonStatus = document.getElementById('json-status');
+        const jsonErrorMessage = document.getElementById('json-error-message');
+        const variablesContent = document.getElementById('variables-content');
+        
         try {
             const jsonText = document.getElementById('variables-json').value;
             variables = jsonText.trim() ? JSON.parse(jsonText) : {};
+            
+            // Clear any previous error status
+            if (jsonStatus) {
+                jsonStatus.textContent = '';
+                jsonStatus.style.color = '';
+            }
+            if (jsonErrorMessage) {
+                jsonErrorMessage.style.display = 'none';
+                jsonErrorMessage.innerHTML = '';
+            }
+            if (variablesContent) {
+                variablesContent.classList.remove('error');
+            }
         } catch (err) {
-            previewContent.innerHTML = `<div class="error"><strong>JSON Error:</strong><br>${err.message}</div>`;
-            this.updateStatus('JSON Error', true);
-            return;
+            // Show JSON error but don't prevent rendering - use empty variables instead
+            variables = {};
+            
+            // Show error in header
+            if (jsonStatus) {
+                jsonStatus.textContent = '❌ JSON ERROR';
+                jsonStatus.style.color = '#e53e3e';
+                jsonStatus.style.fontWeight = 'bold';
+            }
+            
+            // Show detailed error message
+            if (jsonErrorMessage) {
+                jsonErrorMessage.className = 'json-error';
+                jsonErrorMessage.style.display = 'block';
+                jsonErrorMessage.innerHTML = `<strong>JSON Syntax Error:</strong><br>${err.message}`;
+            }
+            
+            // Add error border to container
+            if (variablesContent) {
+                variablesContent.classList.add('error');
+            }
+            
+            console.warn('Invalid JSON in variables, using empty object:', err.message);
         }
         try {
             this.updateStatus('Rendering...');

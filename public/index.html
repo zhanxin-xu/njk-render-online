@@ -254,6 +254,29 @@
             border-color: #48bb78;
         }
 
+        .json-error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 8px 12px;
+            margin: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #e53e3e;
+            font-family: monospace;
+            font-size: 12px;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .variables-content.error {
+            border: 2px solid #e53e3e;
+            border-radius: 8px;
+        }
+
         .html-comment {
             color: #718096;
             font-style: italic;
@@ -325,9 +348,11 @@
 
             <div class="variables-section">
                 <div class="section-header">
-                    ⚙️ Variables
+                    <span>⚙️ Variables</span>
+                    <span id="json-status" style="font-size: 11px; opacity: 0.8;"></span>
                 </div>
-                <div class="variables-content">
+                <div class="variables-content" id="variables-content">
+                    <div id="json-error-message" style="display:none;"></div>
                     <textarea id="variables-json" placeholder='{"name": "John", "showList": true}' style="width:100%; height:100%; border:none; padding:1rem; font-family:monospace; font-size:14px; line-height:1.4; resize:vertical;"></textarea>
                 </div>
             </div>
