@@ -3,6 +3,7 @@ class NunjucksPreview {
         this.variables = new Map();
         this.debounceTimer = null;
         this.editor = null;
+        this.lastRenderedContent = '';
         this.init();
     }
 
@@ -39,6 +40,17 @@ class NunjucksPreview {
         const modeSelect = document.getElementById('render-mode');
         if (modeSelect) {
             modeSelect.addEventListener('change', () => this.debounceUpdate());
+        }
+
+        // Copy buttons
+        const copyTemplateBtn = document.getElementById('copy-template-btn');
+        if (copyTemplateBtn) {
+            copyTemplateBtn.addEventListener('click', () => this.copyTemplate());
+        }
+
+        const copyPreviewBtn = document.getElementById('copy-preview-btn');
+        if (copyPreviewBtn) {
+            copyPreviewBtn.addEventListener('click', () => this.copyPreview());
         }
     }
 
@@ -251,6 +263,54 @@ class NunjucksPreview {
         return html;
     }
 
+    async copyTemplate() {
+        try {
+            const templateContent = this.editor.getValue();
+            await navigator.clipboard.writeText(templateContent);
+            this.showCopySuccess('copy-template-btn');
+        } catch (err) {
+            console.error('Failed to copy template:', err);
+            this.showCopyError('copy-template-btn');
+        }
+    }
+
+    async copyPreview() {
+        try {
+            if (!this.lastRenderedContent) {
+                throw new Error('No content to copy');
+            }
+            await navigator.clipboard.writeText(this.lastRenderedContent);
+            this.showCopySuccess('copy-preview-btn');
+        } catch (err) {
+            console.error('Failed to copy preview:', err);
+            this.showCopyError('copy-preview-btn');
+        }
+    }
+
+    showCopySuccess(buttonId) {
+        const btn = document.getElementById(buttonId);
+        if (btn) {
+            const originalText = btn.querySelector('span:last-child').textContent;
+            btn.classList.add('success');
+            btn.querySelector('span:last-child').textContent = 'Copied!';
+            setTimeout(() => {
+                btn.classList.remove('success');
+                btn.querySelector('span:last-child').textContent = originalText;
+            }, 2000);
+        }
+    }
+
+    showCopyError(buttonId) {
+        const btn = document.getElementById(buttonId);
+        if (btn) {
+            const originalText = btn.querySelector('span:last-child').textContent;
+            btn.querySelector('span:last-child').textContent = 'Failed';
+            setTimeout(() => {
+                btn.querySelector('span:last-child').textContent = originalText;
+            }, 2000);
+        }
+    }
+
     async updatePreview() {
         const template = this.editor.getValue();
         const previewContent = document.getElementById('preview-content');
@@ -280,6 +340,7 @@ class NunjucksPreview {
             const result = await res.json();
             if (result.success) {
                 const content = result.html;
+                this.lastRenderedContent = content; // Store for copying
                 const renderMode = document.getElementById('render-mode')?.value || 'text';
                 
                 if (emptyState) emptyState.style.display = 'none';

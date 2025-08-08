@@ -82,6 +82,9 @@
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .CodeMirror {
@@ -223,6 +226,34 @@
             background: #f56565;
         }
 
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-btn.success {
+            background: rgba(72, 187, 120, 0.9);
+            border-color: #48bb78;
+        }
+
         .html-comment {
             color: #718096;
             font-style: italic;
@@ -273,7 +304,11 @@
         <div class="left-panel">
             <div class="template-section">
                 <div class="section-header">
-                    📝 Template Code
+                    <span>📝 Template Code</span>
+                    <button class="copy-btn" id="copy-template-btn">
+                        <span>📋</span>
+                        <span>Copy</span>
+                    </button>
                 </div>
                 <textarea id="template-editor" placeholder="Enter your Nunjucks template here...">Hello {{ name | default('World') }}!
 
@@ -301,12 +336,18 @@
         <div class="right-panel">
             <div class="preview-header">
                 🔍 Preview
-                <span style="display:flex; align-items:center; gap:6px;">
-                    <label for="render-mode" style="font-weight:normal; font-size:12px; opacity:.8;">Mode</label>
-                    <select id="render-mode" style="font-size:12px; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e0;">
-                        <option value="text" selected>Text</option>
-                        <option value="markdown">Markdown</option>
-                    </select>
+                <span style="display:flex; align-items:center; gap:12px;">
+                    <span style="display:flex; align-items:center; gap:6px;">
+                        <label for="render-mode" style="font-weight:normal; font-size:12px; opacity:.8;">Mode</label>
+                        <select id="render-mode" style="font-size:12px; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e0;">
+                            <option value="text" selected>Text</option>
+                            <option value="markdown">Markdown</option>
+                        </select>
+                    </span>
+                    <button class="copy-btn" id="copy-preview-btn">
+                        <span>📋</span>
+                        <span>Copy</span>
+                    </button>
                 </span>
                 <span class="status-indicator">
                     <span class="status-dot" id="status-dot"></span>
