@@ -147,11 +147,26 @@
         }
 
         .preview-content {
-            padding: 1.5rem;
+            padding: 0;
             height: calc(100% - 45px);
-            overflow-y: auto;
+            overflow: hidden;
             background: #fff;
             white-space: pre-wrap;
+        }
+
+        .preview-content iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+        }
+
+        .preview-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .error {
@@ -279,19 +294,27 @@
         <div class="right-panel">
             <div class="preview-header">
                 🔍 Preview
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <label for="render-mode" style="font-weight:normal; font-size:12px; opacity:.8;">Mode</label>
+                    <select id="render-mode" style="font-size:12px; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e0;">
+                        <option value="text" selected>Text</option>
+                        <option value="markdown">Markdown</option>
+                    </select>
+                </span>
                 <span class="status-indicator">
                     <span class="status-dot" id="status-dot"></span>
                     <span id="status-text">Ready</span>
                 </span>
             </div>
             <div class="preview-content" id="preview-content">
-                <div class="empty-state">
+                <div class="empty-state" id="empty-state">
                     <svg fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
                     </svg>
                     <p>Template preview will appear here</p>
                     <small>Start typing in the template editor to see results</small>
                 </div>
+                <iframe id="preview-frame" style="display:none;"></iframe>
             </div>
         </div>
     </div>

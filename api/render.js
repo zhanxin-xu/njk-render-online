@@ -1,6 +1,6 @@
 const nunjucks = require('nunjucks');
 
-// Configure Nunjucks
+// Configure Nunjucks (no autoescape to support generic XML/text rendering)
 const env = new nunjucks.Environment();
 
 // Add some useful filters
@@ -36,7 +36,7 @@ env.addFilter('highlight', function(text, query) {
     return text.replace(regex, '<mark>$1</mark>');
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');

@@ -36,6 +36,10 @@ class NunjucksPreview {
         if (jsonArea) {
             jsonArea.addEventListener('input', () => this.debounceUpdate());
         }
+        const modeSelect = document.getElementById('render-mode');
+        if (modeSelect) {
+            modeSelect.addEventListener('change', () => this.debounceUpdate());
+        }
     }
 
     debounceUpdate() {
@@ -206,11 +210,58 @@ class NunjucksPreview {
         document.getElementById('status-text').textContent = status;
     }
 
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    parseMarkdown(text) {
+        // Simple Markdown parser for basic formatting
+        let html = this.escapeHtml(text);
+        
+        // Headers
+        html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+        
+        // Bold and italic
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Code blocks
+        html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+        
+        // Links
+        html = html.replace(/\[([^\]]*)\]\(([^)]*)\)/g, '<a href="$2">$1</a>');
+        
+        // Line breaks
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = html.replace(/\n/g, '<br>');
+        
+        // Wrap in paragraphs
+        html = '<p>' + html + '</p>';
+        html = html.replace(/<p><\/p>/g, '');
+        html = html.replace(/<p>(<h[1-6]>)/g, '$1');
+        html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+        html = html.replace(/<p>(<pre>)/g, '$1');
+        html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+        
+        return html;
+    }
+
     async updatePreview() {
         const template = this.editor.getValue();
         const previewContent = document.getElementById('preview-content');
+        const emptyState = document.getElementById('empty-state');
+        const frame = document.getElementById('preview-frame');
         if (!template.trim()) {
-            previewContent.innerHTML = `<div class="empty-state"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg><p>Template preview will appear here</p><small>Start typing in the template editor to see results</small></div>`;
+            if (frame) {
+                frame.style.display = 'none';
+                frame.src = 'about:blank';
+            }
+            if (emptyState) emptyState.style.display = '';
             this.updateStatus('Ready');
             return;
         }
@@ -227,15 +278,84 @@ class NunjucksPreview {
             this.updateStatus('Rendering...');
             const res = await fetch('/api/render', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template, variables }) });
             const result = await res.json();
-                            if (result.success) {
-                    const renderedHtml = result.html.replace(/<!--([\s\S]*?)-->/g, '<span class="html-comment">&lt;!--$1--&gt;</span>');
-                    previewContent.innerHTML = renderedHtml;
-                    this.updateStatus('Rendered');
+            if (result.success) {
+                const content = result.html;
+                const renderMode = document.getElementById('render-mode')?.value || 'text';
+                
+                if (emptyState) emptyState.style.display = 'none';
+                
+                if (renderMode === 'markdown') {
+                    // Render as HTML in iframe for Markdown
+                    if (frame) {
+                        const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3, h4, h5, h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
+        h1 { font-size: 2em; border-bottom: 1px solid #eaecef; padding-bottom: 10px; }
+        h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 8px; }
+        p { margin-bottom: 16px; }
+        code { background: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: 'SF Mono', Monaco, monospace; font-size: 85%; }
+        pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; }
+        pre code { background: none; padding: 0; }
+        blockquote { margin: 0; padding: 0 16px; color: #6a737d; border-left: 4px solid #dfe2e5; }
+        ul, ol { padding-left: 30px; margin-bottom: 16px; }
+        li { margin-bottom: 4px; }
+        a { color: #0366d6; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+        th, td { border: 1px solid #dfe2e5; padding: 6px 13px; }
+        th { background: #f6f8fa; font-weight: 600; }
+    </style>
+</head>
+<body>${this.parseMarkdown(content)}</body>
+</html>`;
+                        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        frame.style.display = 'block';
+                        frame.onload = () => URL.revokeObjectURL(url);
+                        frame.src = url;
+                    }
+                } else {
+                    // Text mode - show plain text in iframe
+                    if (frame) {
+                        const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; 
+            line-height: 1.5; 
+            padding: 20px; 
+            margin: 0; 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>${this.escapeHtml(content)}</body>
+</html>`;
+                        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        frame.style.display = 'block';
+                        frame.onload = () => URL.revokeObjectURL(url);
+                        frame.src = url;
+                    }
+                }
+                this.updateStatus('Rendered');
             } else {
+                if (frame) frame.style.display = 'none';
+                if (emptyState) emptyState.style.display = '';
                 previewContent.innerHTML = `<div class="error"><strong>Rendering Error:</strong><br>${result.error}</div>`;
                 this.updateStatus('Error', true);
             }
         } catch (err) {
+            if (frame) frame.style.display = 'none';
+            if (emptyState) emptyState.style.display = '';
             previewContent.innerHTML = `<div class="error"><strong>Network Error:</strong><br>${err.message}</div>`;
             this.updateStatus('Network Error', true);
         }
